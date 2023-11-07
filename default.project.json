@@ -1,0 +1,26 @@
+{
+  "name": "Lunna",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "src": {
+        "$path": "src/shared"
+      }
+    },
+
+    "ServerScriptService": {
+      "src": {
+        "$path": "src/server"
+      }
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    }
+  }
+}
