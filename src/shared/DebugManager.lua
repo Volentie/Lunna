@@ -9,7 +9,8 @@ export type DebugManager = {
         MODE_STRICT: number,
     },
     State: number,
-    SetDebugState: (self: table, info: number, mode: number) -> (),
+    SetState: (self: table, info: number, mode: number) -> (),
+    GetState: (self: table) -> number,
     HasFlag: (self: table, flag: number) -> boolean,
     IsActive: (self: table) -> boolean,
 }
@@ -28,9 +29,13 @@ DebugManager.FLAGS = {
     MODE_STRICT = 0x8,
 }
 
+DebugManager.DefaultState = function()
+    return "INFO_NONE", "MODE_NONE"
+end
+
 DebugManager.State = bit32.band(DebugManager.FLAGS.INFO_NONE, DebugManager.FLAGS.MODE_NONE)
 
-function DebugManager:SetDebugState(info, mode)
+function DebugManager:SetState(info, mode)
     info = self.FLAGS[info]
     mode = self.FLAGS[mode]
     
@@ -38,17 +43,21 @@ function DebugManager:SetDebugState(info, mode)
     assert(mode, "Invalid mode flag")
     assert(info ~= mode, "Cannot set the same flag for both info and mode")
 
-    DebugManager.State = bit32.band(info, mode)
+    self.State = bit32.bor(info, mode)
 end
 
 function DebugManager:HasFlag(flag)
     flag = self.FLAGS[flag]
     assert(flag, "Invalid flag")
-    return bit32.bor(self.State, flag) ~= 0
+    return bit32.band(self.State, flag) ~= 0
 end
 
 function DebugManager:IsActive()
-    return self.State ~= bit32.band(self.FLAGS.INFO_NONE, self.FLAGS.MODE_NONE)
+    return self.State ~= bit32.bor(self.FLAGS.INFO_NONE, self.FLAGS.MODE_NONE)
+end
+
+function DebugManager:GetState()
+    return self.State
 end
 
 return DebugManager

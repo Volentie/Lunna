@@ -1,6 +1,8 @@
 --// Dependencies
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SharedSrc = ReplicatedStorage.src
+
+--// DebugManager
 local DebugManager = require(SharedSrc:WaitForChild("DebugManager"))
 
 --// Type definitions
@@ -16,7 +18,7 @@ export type Interface = {
 	-- Register a system so it can interact with other systems using the interface as the MITM
 	RegisterSystem: (systemName: string) -> (),
 	-- Add a method to a system
-	RegisterMethod: (systemName: string, methodName: string, callback: () -> ()) -> (),
+	RegisterMethod: (systemName: string, methodName: string, callback: () -> (), includeSelf: boolean?) -> (),
 	-- Try to invoke a system's method
 	Invoke: (systemName: string, methodName: string, ...any) -> ()
 }
@@ -34,7 +36,7 @@ local data = {
 -- -----------------:: Public ::-----------------
 
 --// Calls
-DebugManager:SetDebugState("INFO_WARN", "MODE_NONE")
+DebugManager:SetState("INFO_WARN", "MODE_NONE")
 
 function Interface.Listen(path, callback)
 	assert(path, "You must provide a path to listen to")
@@ -56,43 +58,34 @@ function Interface.Listen(path, callback)
 	}
 end
 
-function Interface.Close(path)
-	assert(path, "You must provide a path to close")
-	local weak = false
+function Interface.Get(path, ...)
+	assert(path, "You must provide a path to get from")
 	if DebugManager:IsActive() then
 		if DebugManager:HasFlag("MODE_STRICT") then
 			assert(data["paths"][path], "Path not found: " .. path)
 		elseif DebugManager:HasFlag("INFO_WARN") then
 			if not data["paths"][path] then
 				warn("Path not found: " .. path)
-				weak = not weak
 			end
 		end
 	end
 
-	if not weak then
-		data["paths"][path] = nil
-	end
+	return data["paths"][path].Callback(...)
 end
 
-function Interface.Post(path, ...)
-	assert(path, "You must provide a path to post to")
-	assert(..., "You must provide data to post to the path: " .. path)
-	local weak = false
+function Interface.Close(path)
+	assert(path, "You must provide a path to close")
 	if DebugManager:IsActive() then
 		if DebugManager:HasFlag("MODE_STRICT") then
 			assert(data["paths"][path], "Path not found: " .. path)
 		elseif DebugManager:HasFlag("INFO_WARN") then
 			if not data["paths"][path] then
 				warn("Path not found: " .. path)
-				weak = not weak
 			end
 		end
 	end
 
-	if not weak then
-		data["paths"][path].Callback(...)
-	end
+	data["paths"][path] = nil
 end
 
 function Interface.RegisterSystem(systemName)
@@ -109,7 +102,7 @@ function Interface.RegisterSystem(systemName)
 	data["systems"][systemName] = {}
 end
 
-function Interface.RegisterMethod(systemName, methodName, callback)
+function Interface.RegisterMethod(systemName, methodName, callback, includeSelf)
 	assert(type(callback) == "function", "Callback must be a function")
 	assert(callback, "You must provide a callback function for the method: " .. methodName)
 	if DebugManager:IsActive() then
@@ -122,25 +115,41 @@ function Interface.RegisterMethod(systemName, methodName, callback)
 			end
 		end
 	end
-	data["systems"][systemName][methodName] = callback
+	data["systems"][systemName][methodName] = function(...)
+		local args = {...}
+		if includeSelf then
+			args = {require(getfenv(callback).script), ...}
+		end
+		callback(table.unpack(args))
+	end
 end
 
 function Interface.Invoke(systemName, methodName, ...)
-	local shouldReturn = data["systems"][systemName] == nil or data["systems"][systemName][methodName] == nil
+	local invalidMethod = data["systems"][systemName] == nil or data["systems"][systemName][methodName] == nil
 	if DebugManager:IsActive() then
 		if DebugManager:HasFlag("MODE_STRICT") then
 			assert(data["systems"][systemName], "Trying to invoke a system that was not found: " .. systemName)
 			assert(data["systems"][systemName][methodName], "Trying to invoke a method that was not found: " .. methodName)
 		elseif DebugManager:HasFlag("INFO_WARN") then
-			if shouldReturn then
-				warn("Invoking a system or method of a system that does not exist:\nsystemName: " .. systemName .. " methodName: " .. methodName)
+			if invalidMethod then
+				warn("Invoking a system or method of a system that does not exist:\n\t\t\tsystemName: " .. systemName .. " methodName: " .. methodName)
 			end
 		end
 	end
-	if shouldReturn then
+	if invalidMethod then
 		return
 	end
 	data["systems"][systemName][methodName](...)
 end
+
+--// DebugManager Registering
+Interface.RegisterSystem("DebugManager")
+Interface.RegisterMethod("DebugManager", "SetState", DebugManager.SetState, true)
+Interface.RegisterMethod("DebugManager", "HasFlag", DebugManager.HasFlag, true)
+Interface.RegisterMethod("DebugManager", "IsActive", DebugManager.IsActive, true)
+
+Interface.Listen("DebugManager/DefaultState", function()
+	return DebugManager.DefaultState()
+end)
 
 return Interface

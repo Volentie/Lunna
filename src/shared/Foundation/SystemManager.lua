@@ -26,8 +26,21 @@ function SystemManager.Register(system, systemName)
 	if systemName then
 		system._Name = systemName
 	end
+	if not system._Name then print(system) end
 	assert(system._Name, "System must have a Name property")
 	table.insert(systems, system)
+
+	-- Register system to the Interface
+	Interface.RegisterSystem(system._Name)
+	Interface.RegisterMethod(system._Name, "Initialize", system.Initialize)
+
+	if system["Update"] then
+		Interface.RegisterMethod(system._Name, "Update", system.Update)
+	end
+	
+	if system["Destroy"] then
+		Interface.RegisterMethod(system._Name, "Destroy", system.Destroy)
+	end
 end
 
 -- Initialize all systems
