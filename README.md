@@ -1,6 +1,5 @@
 ### This is an attempt to create a framework for a SOD approach to gaming.
-### It's a work in progress and not yet complete
-### But it already provides the foundation for building a game model.
+### It's a work in progress and not yet complete, but it already provides the foundation for building a game model.
 
 # Setup stuff:
 
