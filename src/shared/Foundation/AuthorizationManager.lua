@@ -11,7 +11,7 @@ export type AuthorizationManager = {
 
 --// Private variables
 local AuthorizationManager: AuthorizationManager = {
-	Name = "AuthorizationManager"
+	_Name = "AuthorizationManager"
 }
 local permissions = {}
 

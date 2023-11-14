@@ -10,7 +10,7 @@ export type ObjectPool = {
 }
 
 local ObjectPool: ObjectPool = {
-	Name = "ObjectPool"
+	_Name = "ObjectPool"
 }
 local pools = {}
 local objectsTracking = {}

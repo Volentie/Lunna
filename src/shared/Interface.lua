@@ -22,7 +22,7 @@ export type Interface = {
 }
 
 local Interface: Interface = {
-	Name = "Interface"
+	_Name = "Interface"
 }
 
 --// Private

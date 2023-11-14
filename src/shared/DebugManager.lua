@@ -15,7 +15,7 @@ export type DebugManager = {
 }
 
 local DebugManager: DebugManager = {
-    Name = "DebugManager"
+    _Name = "DebugManager"
 }
 
 -- -----------------:: Public Methods ::-----------------

@@ -26,7 +26,7 @@ function Boot()
     --// Register Game Systems to the SystemManager
     local function RegisterGameSystems()
         for _, gameSystem in Systems:GetChildren() do
-            Interface.Invoke("SystemManager", "Register", gameSystem)
+            Interface.Invoke("SystemManager", "Register", require(gameSystem))
         end
     end
 
@@ -37,7 +37,8 @@ function Boot()
 
     local function BuildGame()
         RequireFoundationSystems()
-        RequireGameSystems()
+        --RequireGameSystems()
+        -- SystemManager
         RegisterGameSystems()
         InitializeGameSystems()
     end

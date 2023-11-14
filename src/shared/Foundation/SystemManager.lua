@@ -12,7 +12,7 @@ export type SystemManager = {
 
 --// Private variables
 local SystemManager: SystemManager = {
-	Name = "SystemManager"
+	_Name = "SystemManager"
 }
 local systems = {}
 
@@ -20,31 +20,34 @@ local systems = {}
 
 -- Register a system to be either initialized, updated or destroyed
 function SystemManager.Register(system, systemName)
+	local errMsg1 = "System's type must be 'table', got: '"..typeof(system).."'"
+	local errMsg2 = "\n(!) System is probably not registered to the Interface."
+	assert(typeof(system) == "table", errMsg1..errMsg2)
 	if systemName then
-		system.Name = systemName
+		system._Name = systemName
 	end
-	assert(system.Name, "System must have a Name property")
+	assert(system._Name, "System must have a Name property")
 	table.insert(systems, system)
 end
 
 -- Initialize all systems
 function SystemManager.Initialize()
 	for _, system in pairs(systems) do
-		Interface.Invoke(system.Name, "Initialize")
+		Interface.Invoke(system._Name, "Initialize")
 	end
 end
 
 -- Update all systems
 function SystemManager.Update(deltaTime)
 	for _, system in pairs(systems) do
-		Interface.Invoke(system.Name, "Update")
+		Interface.Invoke(system._Name, "Update")
 	end
 end
 
 -- Destroy all systems
 function SystemManager.Destroy()
 	for _, system in pairs(systems) do
-		Interface.Invoke(system.Name, "Destroy")
+		Interface.Invoke(system._Name, "Destroy")
 	end
 end
 
